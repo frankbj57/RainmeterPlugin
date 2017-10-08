@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26730.16
+VisualStudioVersion = 15.0.26730.15
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PluginEmpty", "PluginEmpty\PluginEmpty.vcxproj", "{64FDEE97-6B7E-40E5-A489-ECA322825BC8}"
 EndProject
@@ -12,6 +12,8 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PluginKeyboardState", "PluginKeyboardState\PluginKeyboardState.vcxproj", "{47A2CCDA-26CD-4E2B-A406-8B8A750A22A7}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PluginDesktopBar", "PluginDesktopBar\PluginDesktopBar.vcxproj", "{1CC4B8F1-BFD2-4EF3-A77B-57D8327E5DE7}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PluginCounter", "PluginCounter\PluginCounter.vcxproj", "{96258B85-14FF-446E-A587-83AD6C7F3016}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -61,6 +63,14 @@ Global
 		{1CC4B8F1-BFD2-4EF3-A77B-57D8327E5DE7}.Release|Win32.Build.0 = Release|Win32
 		{1CC4B8F1-BFD2-4EF3-A77B-57D8327E5DE7}.Release|x64.ActiveCfg = Release|x64
 		{1CC4B8F1-BFD2-4EF3-A77B-57D8327E5DE7}.Release|x64.Build.0 = Release|x64
+		{96258B85-14FF-446E-A587-83AD6C7F3016}.Debug|Win32.ActiveCfg = Debug|Win32
+		{96258B85-14FF-446E-A587-83AD6C7F3016}.Debug|Win32.Build.0 = Debug|Win32
+		{96258B85-14FF-446E-A587-83AD6C7F3016}.Debug|x64.ActiveCfg = Debug|x64
+		{96258B85-14FF-446E-A587-83AD6C7F3016}.Debug|x64.Build.0 = Debug|x64
+		{96258B85-14FF-446E-A587-83AD6C7F3016}.Release|Win32.ActiveCfg = Release|Win32
+		{96258B85-14FF-446E-A587-83AD6C7F3016}.Release|Win32.Build.0 = Release|Win32
+		{96258B85-14FF-446E-A587-83AD6C7F3016}.Release|x64.ActiveCfg = Release|x64
+		{96258B85-14FF-446E-A587-83AD6C7F3016}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
