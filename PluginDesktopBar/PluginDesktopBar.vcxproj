@@ -29,6 +29,7 @@
   <ItemGroup>
     <ClInclude Include="DesktopBarFunctions.h" />
     <ClInclude Include="DesktopBarMeasure.h" />
+    <ClInclude Include="resource.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{1CC4B8F1-BFD2-4EF3-A77B-57D8327E5DE7}</ProjectGuid>

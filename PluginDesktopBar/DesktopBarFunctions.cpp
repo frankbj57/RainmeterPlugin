@@ -123,8 +123,15 @@ namespace DesktopBar
 		// Tell the system we're moving to this new approved position.
 		SHAppBarMessage(ABM_SETPOS, &abd);
 
-		// Move the appbar window to the new position
-		SetWindowPos(hWnd, HWND_BOTTOM, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, SWP_NOACTIVATE);
+		// Save the new coordinates to be queried by the skin and meters
+		Measure *measure = GetDesktopMeasure(hWnd);
+
+		measure->m_Left = abd.rc.left;
+		measure->m_Right = abd.rc.right;
+		measure->m_Top = abd.rc.top;
+		measure->m_Bottom = abd.rc.bottom;
+
+		// Never actually update the window, as we just use it for the windows procedure
 	}
 
 

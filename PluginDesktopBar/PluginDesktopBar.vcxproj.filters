@@ -11,5 +11,6 @@
   <ItemGroup>
     <ClInclude Include="DesktopBarMeasure.h" />
     <ClInclude Include="DesktopBarFunctions.h" />
+    <ClInclude Include="resource.h" />
   </ItemGroup>
 </Project>

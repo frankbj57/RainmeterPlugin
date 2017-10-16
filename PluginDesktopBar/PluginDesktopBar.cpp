@@ -24,53 +24,8 @@ PLUGIN_EXPORT void Initialize(void** data, void* rm)
 	Measure* measure = new Measure;
 	*data = measure;
 
-	// Create a window class for a desktop bar
-	if (g_WindowsRegistered <= 0)
-	{
-		HBRUSH hBrush = CreateSolidBrush(RGB(64, 64, 64));
+	// Delay windows until first reload
 
-		WNDCLASSEX wcex = { sizeof(wcex) };
-		wcex.lpfnWndProc = WndProc;
-		wcex.cbWndExtra = sizeof(LPVOID);  // Room for the measure pointer
-		wcex.lpszClassName = DESKTOP_BAR_WINDOW_CLASS;
-		wcex.style = CS_NOCLOSE | CS_DBLCLKS;
-		// wcex.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);  // Background, could be replaced by customisable background
-		wcex.hbrBackground = hBrush;  // Background, could be replaced by customisable background
-
-		// wcex.hInstance = GetRainmeter().GetModuleInstance();
-
-		RegisterClassEx(&wcex);
-
-		g_WindowsRegistered = (g_WindowsRegistered <= 0) ? 1 : g_WindowsRegistered + 1;
-
-
-	}
-
-	// Create an actual window for the desktop bar
-	HWND hwnd = CreateWindowEx(
-		WS_EX_TOOLWINDOW,
-		DESKTOP_BAR_WINDOW_CLASS,
-		L"Rainmeter Desktop Bar Window",
-		WS_POPUP | WS_CLIPCHILDREN,
-		0,
-		0,
-		400,
-		measure->m_Width,
-		NULL,
-		NULL,
-		NULL,
-		measure  // This is passed on with the NCCREATE message
-	);
-
-	// If the window was successfully created, make the window visible,
-	// update its client area
-	if (hwnd)
-	{
-		measure->m_hWnd = hwnd;
-
-		ShowWindow(hwnd, SW_SHOWDEFAULT); // Set to visible & paint non-client area
-		UpdateWindow(hwnd);         // Tell window to paint client area
-	}
 
 
 }
@@ -101,8 +56,57 @@ PLUGIN_EXPORT void Reload(void* data, void* rm, double* maxValue)
 	}
 
 	int newWidth = measure->m_Width;
-	
+
 	newWidth = RmReadInt(rm, L"Width", 100);
+
+	// Create a window class for a desktop bar
+	if (g_WindowsRegistered <= 0)
+	{
+		WNDCLASSEX wcex = { sizeof(wcex) };
+		wcex.lpfnWndProc = WndProc;
+		wcex.cbWndExtra = sizeof(LPVOID);  // Room for the measure pointer
+		wcex.lpszClassName = DESKTOP_BAR_WINDOW_CLASS;
+		wcex.style = CS_NOCLOSE | CS_DBLCLKS;
+		wcex.hbrBackground = nullptr;
+
+		// wcex.hInstance = GetRainmeter().GetModuleInstance();
+
+		RegisterClassEx(&wcex);
+
+		g_WindowsRegistered = (g_WindowsRegistered <= 0) ? 1 : g_WindowsRegistered + 1;
+	}
+
+	if (!measure->m_Initialized)
+	{
+		// Create a window for the windows procedure
+		// We are actually never using this
+		HWND hwnd = CreateWindowEx(
+			WS_EX_TOOLWINDOW,
+			DESKTOP_BAR_WINDOW_CLASS,
+			L"Rainmeter Desktop Bar Window",
+			WS_POPUP | WS_CLIPCHILDREN,
+			0,
+			0,
+			1,
+			1,
+			NULL,
+			NULL,
+			NULL,
+			measure  // This is passed on with the NCCREATE message, to link window and measure
+		);
+
+		// If the window was successfully created, make the window visible,
+		// update its client area
+		if (hwnd)
+		{
+			measure->m_hWnd = hwnd;  // Links window and measure
+
+			ShowWindow(hwnd, SW_HIDE); // The actual window is never visible
+			UpdateWindow(hwnd);        // Tell window to paint client area, to satisfy Windows
+		}
+
+		measure->m_Initialized = true;
+	}
 
 	if (newWidth != measure->m_Width || newEdge != measure->m_Edge)
 	{
@@ -121,11 +125,16 @@ PLUGIN_EXPORT double Update(void* data)
 
 	std::wostringstream ss;
 
-	ss << (int) measure->m_hWnd << ": " << measure->m_Width << " (W) " << measure->m_Edge << " (E)";
+	ss << "L: " << measure->m_Left 
+		<< " T: " << measure->m_Top 
+		<< " R: " << measure->m_Right 
+		<< " B: " << measure->m_Bottom 
+		<< " H: " << (int)measure->m_hWnd 
+		<< " E: " << measure->m_Edge;
 
 	measure->m_stringResult = ss.str();
 
-	return (double) r;
+	return (double)r;
 }
 
 PLUGIN_EXPORT LPCWSTR GetString(void* data)
@@ -162,10 +171,12 @@ PLUGIN_EXPORT void Finalize(void* data)
 
 static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	if (uMsg == WM_NCCREATE)
+	switch (uMsg)
+	{
+	case WM_NCCREATE:
 	{
 		Measure* measure = (Measure*)((LPCREATESTRUCT)lParam)->lpCreateParams;
-		SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR) measure);
+		SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)measure);
 
 		DesktopBar::Register(hWnd, DESKTOP_BAR_CALLBACK);
 
@@ -176,36 +187,38 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 		//SetWindowLongPtr(hWnd, GWLP_WNDPROC, (LONG_PTR)WndProc);
 		return TRUE;  // Indicating creation should continue
 	}
-	else if (uMsg == DESKTOP_BAR_CALLBACK)
+	break;
+
+	case DESKTOP_BAR_CALLBACK:
 	{
 		// Callback from the Shell application bar API
 		switch (wParam)
 		{
-		// Notifies the appbar that the taskbar's autohide or always-on-top
-		// state has changed.  The appbar can use this to conform to the settings
-		// of the system taskbar.
+			// Notifies the appbar that the taskbar's autohide or always-on-top
+			// state has changed.  The appbar can use this to conform to the settings
+			// of the system taskbar.
 		case ABN_STATECHANGE:
 			break;
 
-		// Notifies the appbar when a full screen application is opening or
-		// closing.  When a full screen app is opening, the appbar must drop
-		// to the bottom of the Z-Order.  When the app is closing, we should
-		// restore our Z-order position.
-		// Since we are always at the bottom, don't do anything
+			// Notifies the appbar when a full screen application is opening or
+			// closing.  When a full screen app is opening, the appbar must drop
+			// to the bottom of the Z-Order.  When the app is closing, we should
+			// restore our Z-order position.
+			// Since we are always at the bottom, don't do anything
 		case ABN_FULLSCREENAPP:
 			break;
 
-		// Notifies the appbar when an event has occured that may effect the
-		// appbar's size and position.  These events include changes in the
-		// taskbar's size, position, and visiblity as well as adding, removing,
-		// or resizing another appbar on the same side of the screen.
+			// Notifies the appbar when an event has occured that may effect the
+			// appbar's size and position.  These events include changes in the
+			// taskbar's size, position, and visiblity as well as adding, removing,
+			// or resizing another appbar on the same side of the screen.
 		case ABN_POSCHANGED:
 			// Update our position in response to the system change
-			{
-				Measure *measure = DesktopBar::GetDesktopMeasure(hWnd);
-				DesktopBar::SetSide(hWnd, measure->m_Edge, measure->m_Width);
-			}
-			break;
+		{
+			Measure *measure = DesktopBar::GetDesktopMeasure(hWnd);
+			DesktopBar::SetSide(hWnd, measure->m_Edge, measure->m_Width);
+		}
+		break;
 
 		// Notifies when windows are tiled, cascaded, etc.
 		// Do nothing
@@ -215,25 +228,77 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 		return 0;
 	}
-	else if (uMsg == WM_ERASEBKGND)
-	{
-		// Paint with customized background brush (or even bitmap)
-		HDC hDc = (HDC) wParam;
+	break;
 
-		SelectObject(hDc, GetStockObject(DC_BRUSH));
-
-		RECT clientRect;
-
-		GetClientRect(hWnd, &clientRect);
-
-		SetDCBrushColor(hDc, RGB(1, 1, 1));
-
-		Rectangle(hDc, clientRect.left, clientRect.top, clientRect.right, clientRect.bottom);
-
-		return 1; // Non-false indicating erase background was done
+	default:
+		return DefWindowProc(hWnd, uMsg, wParam, lParam);
 	}
-
-	return DefWindowProc(hWnd, uMsg, wParam, lParam);
 
 }
 
+// Special plugin functions to return subvalues
+PLUGIN_EXPORT LPCWSTR GetTop(void* data, const int argc, const WCHAR* argv[])
+{
+	Measure *measure = (Measure *)data;
+
+	static wchar_t buffer[25];
+
+	_itow_s(measure->m_Top, buffer, 10);
+
+	return buffer;
+}
+
+PLUGIN_EXPORT LPCWSTR GetBottom(void* data, const int argc, const WCHAR* argv[])
+{
+	Measure *measure = (Measure *)data;
+
+	static wchar_t buffer[25];
+
+	_itow_s(measure->m_Bottom, buffer, 10);
+
+	return buffer;
+}
+
+PLUGIN_EXPORT LPCWSTR GetLeft(void* data, const int argc, const WCHAR* argv[])
+{
+	Measure *measure = (Measure *)data;
+
+	static wchar_t buffer[25];
+
+	_itow_s(measure->m_Left, buffer, 10);
+
+	return buffer;
+}
+
+PLUGIN_EXPORT LPCWSTR GetRight(void* data, const int argc, const WCHAR* argv[])
+{
+	Measure *measure = (Measure *)data;
+
+	static wchar_t buffer[25];
+
+	_itow_s(measure->m_Top, buffer, 10);
+
+	return buffer;
+}
+
+PLUGIN_EXPORT LPCWSTR GetWidth(void* data, const int argc, const WCHAR* argv[])
+{
+	Measure *measure = (Measure *)data;
+
+	static wchar_t buffer[25];
+
+	_itow_s((measure->m_Right-measure->m_Left), buffer, 10);
+
+	return buffer;
+}
+
+PLUGIN_EXPORT LPCWSTR GetHeight(void* data, const int argc, const WCHAR* argv[])
+{
+	Measure *measure = (Measure *)data;
+
+	static wchar_t buffer[25];
+
+	_itow_s((measure->m_Bottom-measure->m_Top), buffer, 10);
+
+	return buffer;
+}
