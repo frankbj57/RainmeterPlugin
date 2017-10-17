@@ -101,7 +101,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <TargetName>DesktopBar</TargetName>
-    <OutDir>x64\$(Configuration)\</OutDir>
+    <OutDir>..\..\..\..\..\AppData\Roaming\Rainmeter\Plugins</OutDir>
     <IntDir>x64\$(Configuration)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">

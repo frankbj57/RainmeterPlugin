@@ -95,8 +95,6 @@ PLUGIN_EXPORT void Reload(void* data, void* rm, double* maxValue)
 			measure  // This is passed on with the NCCREATE message, to link window and measure
 		);
 
-		// If the window was successfully created, make the window visible,
-		// update its client area
 		if (hwnd)
 		{
 			measure->m_hWnd = hwnd;  // Links window and measure
@@ -105,6 +103,7 @@ PLUGIN_EXPORT void Reload(void* data, void* rm, double* maxValue)
 			UpdateWindow(hwnd);        // Tell window to paint client area, to satisfy Windows
 		}
 
+		// Remember we have created the window now
 		measure->m_Initialized = true;
 	}
 
@@ -237,6 +236,9 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 }
 
 // Special plugin functions to return subvalues
+// The use of local static variables makes this plugin non-reenterable
+// Only one desktop bar can be active at one time
+// Should be fixed using allocation in measure object/class
 PLUGIN_EXPORT LPCWSTR GetTop(void* data, const int argc, const WCHAR* argv[])
 {
 	Measure *measure = (Measure *)data;
