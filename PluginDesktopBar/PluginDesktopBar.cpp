@@ -173,66 +173,70 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 	switch (uMsg)
 	{
 	case WM_NCCREATE:
-	{
-		Measure* measure = (Measure*)((LPCREATESTRUCT)lParam)->lpCreateParams;
-		SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)measure);
-
-		DesktopBar::Register(hWnd, DESKTOP_BAR_CALLBACK);
-
-		// Now we should set the size and side of the desktop bar
-		DesktopBar::SetSide(hWnd, measure->m_Edge, measure->m_Width);
-
-		//// Change the window procedure over to MainWndProc now that GWLP_USERDATA is set
-		//SetWindowLongPtr(hWnd, GWLP_WNDPROC, (LONG_PTR)WndProc);
-		return TRUE;  // Indicating creation should continue
-	}
-	break;
-
-	case DESKTOP_BAR_CALLBACK:
-	{
-		// Callback from the Shell application bar API
-		switch (wParam)
 		{
-			// Notifies the appbar that the taskbar's autohide or always-on-top
-			// state has changed.  The appbar can use this to conform to the settings
-			// of the system taskbar.
-		case ABN_STATECHANGE:
-			break;
+			Measure* measure = (Measure*)((LPCREATESTRUCT)lParam)->lpCreateParams;
+			SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)measure);
 
-			// Notifies the appbar when a full screen application is opening or
-			// closing.  When a full screen app is opening, the appbar must drop
-			// to the bottom of the Z-Order.  When the app is closing, we should
-			// restore our Z-order position.
-			// Since we are always at the bottom, don't do anything
-		case ABN_FULLSCREENAPP:
-			break;
+			DesktopBar::Register(hWnd, DESKTOP_BAR_CALLBACK);
 
-			// Notifies the appbar when an event has occured that may effect the
-			// appbar's size and position.  These events include changes in the
-			// taskbar's size, position, and visiblity as well as adding, removing,
-			// or resizing another appbar on the same side of the screen.
-		case ABN_POSCHANGED:
-			// Update our position in response to the system change
-		{
-			Measure *measure = DesktopBar::GetDesktopMeasure(hWnd);
+			// Now we should set the size and side of the desktop bar
 			DesktopBar::SetSide(hWnd, measure->m_Edge, measure->m_Width);
+
+			//// Change the window procedure over to MainWndProc now that GWLP_USERDATA is set
+			//SetWindowLongPtr(hWnd, GWLP_WNDPROC, (LONG_PTR)WndProc);
+			return TRUE;  // Indicating creation should continue
 		}
 		break;
+	}
 
-		// Notifies when windows are tiled, cascaded, etc.
-		// Do nothing
-		case ABN_WINDOWARRANGE:
+	Measure *measure = DesktopBar::GetDesktopMeasure(hWnd);
+	if (measure)
+	{
+		switch (uMsg)
+		{
+		case DESKTOP_BAR_CALLBACK:
+			{
+				// Callback from the Shell application bar API
+				switch (wParam)
+				{
+					// Notifies the appbar that the taskbar's autohide or always-on-top
+					// state has changed.  The appbar can use this to conform to the settings
+					// of the system taskbar.
+				case ABN_STATECHANGE:
+					break;
+
+					// Notifies the appbar when a full screen application is opening or
+					// closing.  When a full screen app is opening, the appbar must drop
+					// to the bottom of the Z-Order.  When the app is closing, we should
+					// restore our Z-order position.
+					// Since we are always at the bottom, don't do anything
+				case ABN_FULLSCREENAPP:
+					break;
+
+					// Notifies the appbar when an event has occured that may effect the
+					// appbar's size and position.  These events include changes in the
+					// taskbar's size, position, and visiblity as well as adding, removing,
+					// or resizing another appbar on the same side of the screen.
+				case ABN_POSCHANGED:
+					// Update our position in response to the system change
+					{
+						DesktopBar::SetSide(hWnd, measure->m_Edge, measure->m_Width);
+					}
+					break;
+
+					// Notifies when windows are tiled, cascaded, etc.
+					// Do nothing
+				case ABN_WINDOWARRANGE:
+					break;
+				}
+
+				return 0;
+			}
 			break;
 		}
-
-		return 0;
-	}
-	break;
-
-	default:
-		return DefWindowProc(hWnd, uMsg, wParam, lParam);
 	}
 
+	return DefWindowProc(hWnd, uMsg, wParam, lParam);
 }
 
 // Special plugin functions to return subvalues
